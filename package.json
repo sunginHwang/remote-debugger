@@ -1,6 +1,7 @@
 {
   "name": "remote-dugugger",
   "private": true,
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -13,8 +14,7 @@
     "turbo": "^2.7.2",
     "typescript": "5.9.2"
   },
-  "packageManager": "pnpm@9.0.0",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
