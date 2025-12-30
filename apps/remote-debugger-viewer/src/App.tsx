@@ -26,7 +26,10 @@ function App() {
 
   if (mode === 'recorder') {
     return (
-      <SampleComponent onStartRecording={handleStartRecording} onStopRecording={handleStopRecording} onSwitchToPlayer={handleSwitchToPlayer} />
+      <SampleComponent events={events} onSaveEventsToState={() => {
+        recorder.stopRecording();
+        setEvents(recorder.getEvents());
+      }} onStartRecording={handleStartRecording} onStopRecording={handleStopRecording} onSwitchToPlayer={handleSwitchToPlayer} />
     );
   } else {
     return (

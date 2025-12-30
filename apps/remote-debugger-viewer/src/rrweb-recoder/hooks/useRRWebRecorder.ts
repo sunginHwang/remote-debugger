@@ -113,7 +113,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
       eventsRef.current.push(event);
       console.log('[RRWeb] ✅ 이벤트 추가', event);
 
-
+      
       // 상태 업데이트
       setState((prev) => ({
         ...prev,
@@ -139,6 +139,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
       eventsRef.current = [];
 
       // rrweb 레코딩 시작
+      // packFn은 제거: 전송 시점에만 pack을 적용하여 최적화
       stopRecordingRef.current = record({
         emit: handleEvent,
         checkoutEveryNms: 30_000, // 30초마다 full snapshot

@@ -1,6 +1,6 @@
-import { Module } from '@nestjs/common';
-import { RrwebController } from './rrweb.controller';
-import { RrwebService } from './rrweb.service';
+import { Module } from "@nestjs/common";
+import { RrwebController } from "./rrweb.controller";
+import { RrwebService } from "./rrweb.service";
 
 @Module({
   imports: [],

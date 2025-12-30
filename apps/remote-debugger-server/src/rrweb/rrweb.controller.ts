@@ -8,10 +8,9 @@ import {
   Query,
   ParseIntPipe,
   Headers,
-  BadRequestException,
-} from '@nestjs/common';
-import { RrwebService } from './rrweb.service';
-import { SessionEvent } from '@prisma/client';
+} from "@nestjs/common";
+import { RrwebService } from "./rrweb.service";
+import { SessionEvent } from "@prisma/client";
 
 /**
  * DTO for saving packed rrweb events
@@ -31,13 +30,38 @@ class SavePackedEventsDto {
 }
 
 /**
+ * DTO for saving multiple packed rrweb events
+ */
+class SaveMultiplePackedEventsDto {
+  /**
+   * Array of packed strings from rrweb.pack()
+   * @example ["packed_event_1", "packed_event_2"]
+   */
+  packed: string[];
+
+  /**
+   * Session ID
+   * @example "session_123"
+   */
+  sessionId: string;
+}
+
+/**
  * Response for saving packed events
  */
 interface SavePackedEventsResponse {
   sessionId: string;
 }
 
-@Controller('rrweb')
+/**
+ * Response for saving multiple packed events
+ */
+interface SaveMultiplePackedEventsResponse {
+  sessionId: string;
+  saved: number;
+}
+
+@Controller("rrweb")
 export class RrwebController {
   constructor(private readonly rrwebService: RrwebService) {}
 
@@ -63,22 +87,34 @@ export class RrwebController {
    *   body: JSON.stringify({ packed }),
    * });
    */
-  @Post('events')
+  @Post("events")
   async savePackedEvents(
-    @Body() {packed, sessionId}: SavePackedEventsDto,
-  ): Promise<SavePackedEventsResponse> {
-    // Process and save events
-    const result = await this.rrwebService.savePackedEvent(sessionId, packed);
-    return { sessionId: result.sessionId };
+    @Body() body: SavePackedEventsDto | SaveMultiplePackedEventsDto,
+  ): Promise<SavePackedEventsResponse | SaveMultiplePackedEventsResponse> {
+    // Check if it's an array (multiple events) or single event
+    if (Array.isArray(body.packed)) {
+      // Multiple events
+      const { packed, sessionId } = body as SaveMultiplePackedEventsDto;
+      const result = await this.rrwebService.savePackedEvents(
+        sessionId,
+        packed,
+      );
+      return { sessionId, saved: result.length };
+    } else {
+      // Single event
+      const { packed, sessionId } = body as SavePackedEventsDto;
+      const result = await this.rrwebService.savePackedEvent(sessionId, packed);
+      return { sessionId: result.sessionId };
+    }
   }
 
   /**
    * GET /rrweb/sessions/:sessionId/events
    * Get all events for a specific session
    */
-  @Get('sessions/:sessionId/events')
+  @Get("sessions/:sessionId/events")
   async getEventsBySession(
-    @Param('sessionId') sessionId: string,
+    @Param("sessionId") sessionId: string,
   ): Promise<SessionEvent[]> {
     return this.rrwebService.getEventsBySession(sessionId);
   }
@@ -87,9 +123,9 @@ export class RrwebController {
    * GET /rrweb/events/:id
    * Get a specific event by ID
    */
-  @Get('events/:id')
+  @Get("events/:id")
   async getEventById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
   ): Promise<SessionEvent> {
     return this.rrwebService.getEventById(id);
   }
@@ -98,9 +134,9 @@ export class RrwebController {
    * DELETE /rrweb/sessions/:sessionId/events
    * Delete all events for a specific session
    */
-  @Delete('sessions/:sessionId/events')
+  @Delete("sessions/:sessionId/events")
   async deleteEventsBySession(
-    @Param('sessionId') sessionId: string,
+    @Param("sessionId") sessionId: string,
   ): Promise<{ deleted: number }> {
     const count = await this.rrwebService.deleteEventsBySession(sessionId);
     return { deleted: count };
@@ -110,9 +146,9 @@ export class RrwebController {
    * DELETE /rrweb/events/:id
    * Delete a specific event by ID
    */
-  @Delete('events/:id')
+  @Delete("events/:id")
   async deleteEventById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number,
   ): Promise<SessionEvent> {
     return this.rrwebService.deleteEventById(id);
   }
@@ -121,10 +157,10 @@ export class RrwebController {
    * GET /rrweb/events?startTime=xxx&endTime=xxx
    * Get events within a time range
    */
-  @Get('events')
+  @Get("events")
   async getEventsByTimeRange(
-    @Query('startTime', ParseIntPipe) startTime: number,
-    @Query('endTime', ParseIntPipe) endTime: number,
+    @Query("startTime", ParseIntPipe) startTime: number,
+    @Query("endTime", ParseIntPipe) endTime: number,
   ): Promise<SessionEvent[]> {
     return this.rrwebService.getEventsByTimeRange(startTime, endTime);
   }

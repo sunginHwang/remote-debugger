@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { SessionEvent } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { SessionEvent } from "@prisma/client";
+import { PrismaService } from "../prisma/prisma.service";
 
 @Injectable()
 export class RrwebService {
@@ -26,6 +26,42 @@ export class RrwebService {
   }
 
   /**
+   * Save multiple packed events to the database
+   * @param sessionId - Unique session identifier
+   * @param packedEvents - Array of packed event data
+   * @returns Array of created session events
+   */
+  async savePackedEvents(
+    sessionId: string,
+    packedEvents: string[],
+  ): Promise<SessionEvent[]> {
+    const now = Date.now();
+    // Use createManyAndReturn if available (Prisma 5.0+), otherwise use individual creates
+    try {
+      return await this.prisma.sessionEvent.createManyAndReturn({
+        data: packedEvents.map((packedEventData) => ({
+          sessionId,
+          eventData: packedEventData,
+          timestamp: now,
+        })),
+      });
+    } catch {
+      // Fallback: create individually if createManyAndReturn is not available
+      return Promise.all(
+        packedEvents.map((packedEventData) =>
+          this.prisma.sessionEvent.create({
+            data: {
+              sessionId,
+              eventData: packedEventData,
+              timestamp: now,
+            },
+          }),
+        ),
+      );
+    }
+  }
+
+  /**
    * Get all events for a specific session
    * @param sessionId - Session identifier
    * @returns Array of session events ordered by timestamp
@@ -33,7 +69,7 @@ export class RrwebService {
   async getEventsBySession(sessionId: string): Promise<SessionEvent[]> {
     return this.prisma.sessionEvent.findMany({
       where: { sessionId },
-      orderBy: { timestamp: 'asc' },
+      orderBy: { timestamp: "asc" },
     });
   }
 
@@ -102,9 +138,7 @@ export class RrwebService {
           lte: endTime,
         },
       },
-      orderBy: { timestamp: 'asc' },
+      orderBy: { timestamp: "asc" },
     });
   }
-
-
 }
