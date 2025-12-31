@@ -8,6 +8,7 @@ import {
   Query,
   ParseIntPipe,
   Headers,
+  NotFoundException,
 } from "@nestjs/common";
 import { RrwebService } from "./rrweb.service";
 import { SessionEvent } from "@prisma/client";
@@ -89,15 +90,16 @@ export class RrwebController {
    */
   @Post("events")
   async savePackedEvents(
-    @Body() body: SavePackedEventsDto | SaveMultiplePackedEventsDto,
+    @Body() body: SavePackedEventsDto | SaveMultiplePackedEventsDto
   ): Promise<SavePackedEventsResponse | SaveMultiplePackedEventsResponse> {
     // Check if it's an array (multiple events) or single event
     if (Array.isArray(body.packed)) {
       // Multiple events
       const { packed, sessionId } = body as SaveMultiplePackedEventsDto;
+      console.log(packed, sessionId);
       const result = await this.rrwebService.savePackedEvents(
         sessionId,
-        packed,
+        packed
       );
       return { sessionId, saved: result.length };
     } else {
@@ -114,7 +116,7 @@ export class RrwebController {
    */
   @Get("sessions/:sessionId/events")
   async getEventsBySession(
-    @Param("sessionId") sessionId: string,
+    @Param("sessionId") sessionId: string
   ): Promise<SessionEvent[]> {
     return this.rrwebService.getEventsBySession(sessionId);
   }
@@ -125,9 +127,15 @@ export class RrwebController {
    */
   @Get("events/:id")
   async getEventById(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number
   ): Promise<SessionEvent> {
-    return this.rrwebService.getEventById(id);
+    console.log(id);
+    try {
+      return this.rrwebService.getEventById(id);
+    } catch (error) {
+      console.error(error);
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
   }
 
   /**
@@ -136,7 +144,7 @@ export class RrwebController {
    */
   @Delete("sessions/:sessionId/events")
   async deleteEventsBySession(
-    @Param("sessionId") sessionId: string,
+    @Param("sessionId") sessionId: string
   ): Promise<{ deleted: number }> {
     const count = await this.rrwebService.deleteEventsBySession(sessionId);
     return { deleted: count };
@@ -148,7 +156,7 @@ export class RrwebController {
    */
   @Delete("events/:id")
   async deleteEventById(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("id", ParseIntPipe) id: number
   ): Promise<SessionEvent> {
     return this.rrwebService.deleteEventById(id);
   }
@@ -160,7 +168,7 @@ export class RrwebController {
   @Get("events")
   async getEventsByTimeRange(
     @Query("startTime", ParseIntPipe) startTime: number,
-    @Query("endTime", ParseIntPipe) endTime: number,
+    @Query("endTime", ParseIntPipe) endTime: number
   ): Promise<SessionEvent[]> {
     return this.rrwebService.getEventsByTimeRange(startTime, endTime);
   }
