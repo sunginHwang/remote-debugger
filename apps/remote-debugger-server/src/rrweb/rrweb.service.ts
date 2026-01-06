@@ -15,15 +15,24 @@ export class RrwebService {
   ) {}
 
   /**
-   * Save a session replay event to the database
+   *  rrweb event 저장
    * @param sessionId - Unique session identifier
-   * @param eventData - rrweb event data (will be stored as JSONB)
-   * @returns Created session event
+   * @param packedEventData - packed된 rrweb event data
+   * @param jiraProjectKey - Jira 프로젝트 키
+   * @param userAgent - 사용자 에이전트
+   * @returns 저장된 rrweb event
    */
-  async savePackedEvent(
-    sessionId: string,
-    packedEventData: string
-  ): Promise<SessionEvent> {
+  async saveEvent({
+    sessionId,
+    packedEventData,
+    jiraProjectKey,
+    userAgent,
+  }: {
+    sessionId: string;
+    packedEventData: string;
+    jiraProjectKey: string;
+    userAgent: string;
+  }): Promise<SessionEvent> {
     const event = await this.prisma.sessionEvent.create({
       data: {
         sessionId,
@@ -32,100 +41,64 @@ export class RrwebService {
       },
     });
 
-    const tempJiraProjectKey = "ADFE";
-
     // 패킷 저장 후 외부 API 호출 (비동기, 실패해도 저장은 성공)
-    this.notifyExternalServices(sessionId, 1, tempJiraProjectKey).catch(
-      (error) => {
-        this.logger.error(
-          `외부 서비스 알림 실패 (세션: ${sessionId}):`,
-          error.stack
-        );
-      }
-    );
+    this.notifyExternalServices({
+      eventId: event.id,
+      jiraProjectKey,
+      userAgent,
+    }).catch((error) => {
+      this.logger.error(
+        `saveEvent: 외부 서비스 알림 실패 (이벤트ID: ${event.id}):`,
+        error.stack
+      );
+    });
 
     return event;
   }
 
   /**
-   * Save multiple packed events to the database
-   * @param sessionId - Unique session identifier
-   * @param packedEvents - Array of packed event data
-   * @returns Array of created session events
-   */
-  async savePackedEvents(
-    sessionId: string,
-    packedEvents: string[]
-  ): Promise<SessionEvent[]> {
-    const now = Date.now();
-    // Use createManyAndReturn if available (Prisma 5.0+), otherwise use individual creates
-    let events: SessionEvent[];
-    try {
-      events = await this.prisma.sessionEvent.createManyAndReturn({
-        data: packedEvents.map((packedEventData) => ({
-          sessionId,
-          eventData: packedEventData,
-          timestamp: now,
-        })),
-      });
-    } catch {
-      // Fallback: create individually if createManyAndReturn is not available
-      events = await Promise.all(
-        packedEvents.map((packedEventData) =>
-          this.prisma.sessionEvent.create({
-            data: {
-              sessionId,
-              eventData: packedEventData,
-              timestamp: now,
-            },
-          })
-        )
-      );
-    }
-
-    return events;
-  }
-
-  /**
    * 외부 서비스에 알림 전송 (Slack, Jira)
-   * @param sessionId - 세션 ID
+   * @param eventId - 이벤트 ID
    * @param eventCount - 저장된 이벤트 개수
    */
-  private async notifyExternalServices(
-    sessionId: string,
-    eventCount: number,
-    jiraProjectKey: string
-  ): Promise<void> {
+  private async notifyExternalServices({
+    eventId,
+    jiraProjectKey,
+    userAgent,
+  }: {
+    eventId: number;
+    jiraProjectKey: string;
+    userAgent: string;
+  }): Promise<void> {
     const jiraTicketLink = await this.jiraService
-      .createTicket(sessionId, jiraProjectKey)
+      .createTicket(eventId, jiraProjectKey, userAgent)
       .catch((error) => {
         this.logger.warn(`Jira 티켓 생성 실패: ${error.message}`);
       });
+    const remoteDebuggerViewerUrl = process.env.REMOTE_DEBUGGER_VIEWER_URL;
 
-    const slackMessage = `이벤트 생성 완료! ${jiraTicketLink}`;
+    if (!remoteDebuggerViewerUrl) {
+      this.logger.warn(
+        "REMOTE_DEBUGGER_VIEWER_URL 환경변수가 설정되지 않았습니다"
+      );
+      return;
+    }
+    const viewerLink = `${remoteDebuggerViewerUrl}/viewer?eventId=${eventId}`;
+    const slackMessage = `이벤트 생성 완료! 지라티켓:${jiraTicketLink}, \n 재생링크: ${viewerLink}`;
 
     this.slackService
-      .sendNotification(slackMessage, sessionId)
+      .sendNotification({
+        message: slackMessage,
+        eventId,
+      })
       .catch((error) => {
         this.logger.warn(`Slack 알림 실패: ${error.message}`);
       });
   }
 
   /**
-   * Get all events for a specific session
-   * @param sessionId - Session identifier
-   * @returns Array of session events ordered by timestamp
-   */
-  async getEventsBySession(sessionId: string): Promise<SessionEvent[]> {
-    return this.prisma.sessionEvent.findMany({
-      where: { sessionId },
-      orderBy: { timestamp: "asc" },
-    });
-  }
-
-  /**
-   * Get a single event by ID
-   * @param id - Event ID
+   * eventId 기반 event 조회
+   * @param eventId - Event ID
    * @returns Session event
    */
   async getEventById(id: number): Promise<SessionEvent> {
@@ -141,54 +114,20 @@ export class RrwebService {
   }
 
   /**
-   * Delete all events for a specific session
-   * @param sessionId - Session identifier
-   * @returns Number of deleted events
-   */
-  async deleteEventsBySession(sessionId: string): Promise<number> {
-    const result = await this.prisma.sessionEvent.deleteMany({
-      where: { sessionId },
-    });
-
-    return result.count;
-  }
-
-  /**
-   * Delete a specific event by ID
+   * id 기반 event 삭제
    * @param id - Event ID
-   * @returns Deleted event
+   * @returns 삭제된 event
    */
-  async deleteEventById(id: number): Promise<SessionEvent> {
+  async deleteEventById(eventId: number): Promise<SessionEvent> {
     try {
       return await this.prisma.sessionEvent.delete({
-        where: { id },
+        where: { id: eventId },
       });
     } catch (error: unknown) {
       if (error instanceof NotFoundException) {
         throw error;
       }
-      throw new NotFoundException(`Event with ID ${id} not found`);
+      throw new NotFoundException(`Event with ID ${eventId} not found`);
     }
-  }
-
-  /**
-   * Get events within a time range
-   * @param startTime - Start timestamp
-   * @param endTime - End timestamp
-   * @returns Array of session events
-   */
-  async getEventsByTimeRange(
-    startTime: number,
-    endTime: number
-  ): Promise<SessionEvent[]> {
-    return this.prisma.sessionEvent.findMany({
-      where: {
-        timestamp: {
-          gte: startTime,
-          lte: endTime,
-        },
-      },
-      orderBy: { timestamp: "asc" },
-    });
   }
 }

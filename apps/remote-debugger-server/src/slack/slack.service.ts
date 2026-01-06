@@ -1,6 +1,10 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { HttpService } from "@nestjs/axios";
-import { firstValueFrom } from "rxjs";
+import { getSlackConfig, slackPost } from "src/utils/slack/slack-client.util";
+import {
+  SlackPostMessageResponse,
+  SlackPostMessagePayload,
+} from "./interfaces/slack-api.interface";
 
 @Injectable()
 export class SlackService {
@@ -11,64 +15,63 @@ export class SlackService {
   /**
    * Slack에 알림 전송
    * @param message - 전송할 메시지
-   * @param sessionId - 세션 ID
+   * @param eventId - 이벤트 ID
+   * @param channelId - 대상 채널 ID (선택사항)
    */
-  async sendNotification(
-    message: string,
-    sessionId: string,
-    channelId?: string
-  ): Promise<void> {
+  async sendNotification({
+    message,
+    eventId,
+    channelId,
+  }: {
+    message: string;
+    eventId: number;
+    channelId?: string;
+  }): Promise<void> {
     try {
-      const slackChatLink = process.env.SLACK_CHAT_LINK;
-      const slackBotToken = process.env.SLACK_BOT_TOKEN;
-      const defaultChannelId = process.env.SLACK_CHANNEL_ID;
-      const targetChannelId = channelId || defaultChannelId;
+      const slackConfig = getSlackConfig();
 
-      if (!slackChatLink || !slackBotToken) {
-        this.logger.warn(
-          "SLACK_API_URL 또는 SLACK_BOT_TOKEN이 설정되지 않았습니다."
-        );
+      if (!slackConfig) {
+        this.logger.warn("Slack 설정이 완료되지 않았습니다");
         return;
       }
+
+      const targetChannelId = channelId || slackConfig.defaultChannelId;
 
       if (!targetChannelId) {
-        this.logger.warn("SLACK_CHANNEL_ID가 설정되지 않았습니다.");
+        this.logger.warn("Slack 채널 ID가 설정되지 않았습니다");
         return;
       }
 
-      const response = await firstValueFrom(
-        this.httpService.post(
-          slackChatLink,
+      const payload: SlackPostMessagePayload = {
+        channel: targetChannelId,
+        text: message,
+        blocks: [
           {
-            channel: targetChannelId,
-            text: message,
-            blocks: [
-              {
-                type: "section",
-                text: {
-                  type: "mrkdwn",
-                  text: `*RRWeb 이벤트 저장 완료*\n세션 ID: ${sessionId}\n${message}`,
-                },
-              },
-            ],
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${slackBotToken}`,
-              "Content-Type": "application/json",
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*RRWeb 이벤트 저장 완료*\n이벤트 ID: ${eventId}\n${message}`,
             },
-          }
-        )
+          },
+        ],
+      };
+
+      const response = await slackPost<SlackPostMessageResponse>(
+        this.httpService,
+        payload
       );
 
-      if (!response.data.ok) {
-        throw new Error(
-          `Slack API 오류: ${response.data.error || "Unknown error"}`
-        );
+      if (!response) {
+        this.logger.error("Slack 알림 전송 실패 - 응답이 존재하지 않습니다");
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Slack API 오류: ${response.error || "Unknown error"}`);
       }
 
       this.logger.log(
-        `Slack 알림 전송 완료: ${sessionId} (채널: ${targetChannelId})`
+        `Slack 알림 전송 완료: ${eventId} (채널: ${targetChannelId})`
       );
     } catch (error) {
       this.logger.error(`Slack 알림 전송 실패: ${error.message}`, error.stack);

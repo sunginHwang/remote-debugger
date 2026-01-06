@@ -22,7 +22,6 @@ async function bootstrap() {
       // 모든 origin 허용
       callback(null, true);
     },
-    credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"],
     allowedHeaders: "*",
     exposedHeaders: "*",
@@ -31,5 +30,3 @@ async function bootstrap() {
   await app.listen(process.env.PORT ?? 5000);
 }
 void bootstrap();
-
-

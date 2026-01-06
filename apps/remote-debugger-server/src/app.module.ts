@@ -1,12 +1,9 @@
 import { Module } from "@nestjs/common";
-import { AppController } from "./controllers/app/app.controller";
-import { AppService } from "./app.service";
 import { RrwebModule } from "./rrweb/rrweb.module";
 import { PrismaModule } from "./prisma/prisma.module";
+import { JiraModule } from "./jira/jira.module";
 
 @Module({
-  imports: [PrismaModule, RrwebModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [PrismaModule, RrwebModule, JiraModule],
 })
 export class AppModule {}
