@@ -2,7 +2,7 @@ import rrwebPlayer from "rrweb-player";
 import "rrweb-player/dist/style.css";
 import type { eventWithTime } from "@rrweb/types";
 import type rrwebPlayerType from "rrweb-player";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { unpack } from "rrweb";
 
 interface Props {
@@ -124,7 +124,15 @@ const extractNetworkRequests = (events: eventWithTime[]) => {
 export function ReplayRrweb() {
   const playerRef = useRef<HTMLDivElement>(null);
   const playerControllerRef = useRef<rrwebPlayerType | null>(null);
-  const [replaySessionId, setReplaySessionId] = useState<string>("");
+  const [replayEventId, setReplayEventId] = useState<number>(0);
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get("eventId");
+    if (eventId) {
+      setReplayEventId(Number(eventId));
+    }
+  }, []);
 
   const handlePlay = async () => {
     const events = await getEvents();
@@ -147,12 +155,13 @@ export function ReplayRrweb() {
   };
 
   const getEvents = async () => {
-    if (!replaySessionId) {
-      alert("리플레이 세션 ID를 입력해주세요.");
+    if (!replayEventId) {
+      alert("리플레이 이벤트 ID를 입력해주세요.");
       return null;
     }
+
     const response = await fetch(
-      `http://localhost:5543/rrweb/events/${replaySessionId}`
+      `http://localhost:5543/rrweb/events/${replayEventId}`
     );
     const events = await response.json();
     const unpackedEvents = JSON.parse(events["eventData"]).packed as string[];
@@ -168,9 +177,9 @@ export function ReplayRrweb() {
       <h1>Rrweb Player</h1>
       <input
         type="text"
-        placeholder="Replay Session ID"
-        value={replaySessionId}
-        onChange={(e) => setReplaySessionId(e.target.value)}
+        placeholder="Replay Event ID"
+        value={replayEventId}
+        onChange={(e) => setReplayEventId(Number(e.target.value))}
       />
       <button onClick={handlePlay}>리플레이 재생하기</button>
 

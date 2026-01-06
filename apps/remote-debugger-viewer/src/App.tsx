@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 import { SampleComponent } from "./components/sample-component/SampleComponent";
 import { RrwebPlayer } from "./rrweb-player/RrwebPlayer";
@@ -12,6 +12,14 @@ function App() {
   const [mode, setMode] = useState<"recorder" | "player" | "replay">(
     "recorder"
   );
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const eventId = urlParams.get("eventId");
+    if (eventId) {
+      setMode("replay");
+    }
+  }, []);
 
   const handleStartRecording = () => {
     recorder.startRecording();
