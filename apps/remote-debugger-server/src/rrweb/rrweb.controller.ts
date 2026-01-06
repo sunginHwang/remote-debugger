@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from "@nestjs/common";
 import { SessionEvent } from "@prisma/client";
 import { SaveEventDto } from "./dto/save-event";
 import {
@@ -29,9 +37,9 @@ export class RrwebController {
   /**
    * id 기반 event 조회
    */
-  @Get("events/eventId")
+  @Get("events/:eventId")
   async getEvent(
-    @Param("eventId") eventId: number
+    @Param("eventId", ParseIntPipe) eventId: number
   ): Promise<SessionEvent | null> {
     return this.rrwebService.getEventById(eventId);
   }
@@ -41,7 +49,7 @@ export class RrwebController {
    */
   @Delete("events/:eventId")
   async deleteEvent(
-    @Param("eventId") eventId: number
+    @Param("eventId", ParseIntPipe) eventId: number
   ): Promise<DeleteEventResponseDto> {
     await this.rrwebService.deleteEventById(eventId);
     return { isDeleted: true };

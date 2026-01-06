@@ -75,15 +75,15 @@ export class RrwebService {
       .catch((error) => {
         this.logger.warn(`Jira 티켓 생성 실패: ${error.message}`);
       });
-    const remoteDebuggerViewerUrl = process.env.REMOTE_DEBUGGER_VIEWER_URL;
+    const remoteDebugViewerUrl = process.env.REMOTE_DEBUG_VIEWER_URL;
 
-    if (!remoteDebuggerViewerUrl) {
+    if (!remoteDebugViewerUrl) {
       this.logger.warn(
-        "REMOTE_DEBUGGER_VIEWER_URL 환경변수가 설정되지 않았습니다"
+        "REMOTE_DEBUG_VIEWER_URL 환경변수가 설정되지 않았습니다"
       );
       return;
     }
-    const viewerLink = `${remoteDebuggerViewerUrl}/viewer?eventId=${eventId}`;
+    const viewerLink = `${remoteDebugViewerUrl}/viewer?eventId=${eventId}`;
     const slackMessage = `이벤트 생성 완료! 지라티켓:${jiraTicketLink}, \n 재생링크: ${viewerLink}`;
 
     this.slackService
@@ -121,7 +121,7 @@ export class RrwebService {
   async deleteEventById(eventId: number): Promise<SessionEvent> {
     try {
       return await this.prisma.sessionEvent.delete({
-        where: { id: eventId },
+        where: { id: Number(eventId) },
       });
     } catch (error: unknown) {
       if (error instanceof NotFoundException) {

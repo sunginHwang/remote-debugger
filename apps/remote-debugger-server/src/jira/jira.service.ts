@@ -135,7 +135,7 @@ export class JiraService {
                   },
                   {
                     type: "text",
-                    text: eventId,
+                    text: String(eventId),
                     marks: [{ type: "code" }],
                   },
                 ],
