@@ -69,14 +69,14 @@ export class RRWebSDK {
   /**
    * 기록된 이벤트 전송
    */
-  async uploadRrwebEvents() {
+  async uploadRrwebEvents(projectKey: string) {
     const events = this.recorder.getEvents();
     if (events.length === 0) {
       console.log("[RRWeb SDK] 전송할 이벤트가 없습니다.");
       return;
     }
 
-    const result = await this.uploader.send(events, this.sessionId);
+    const result = await this.uploader.send(events, this.sessionId, projectKey);
 
     if (result) {
       this.recorder.clearUploadedEvents(events);
@@ -133,7 +133,8 @@ export class RRWebSDK {
     this.uiRoot.render(
       createElement(UIManager, {
         getState: () => this.getState(),
-        onUploadRrwebEvents: () => this.uploadRrwebEvents(),
+        onUploadRrwebEvents: (projectKey: string) =>
+          this.uploadRrwebEvents(projectKey),
       })
     );
   }

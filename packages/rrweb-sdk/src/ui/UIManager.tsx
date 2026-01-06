@@ -6,7 +6,7 @@ import type { RecordingState } from "../types";
 
 interface Props {
   getState: () => RecordingState;
-  onUploadRrwebEvents: () => void;
+  onUploadRrwebEvents: (projectKey: string) => void;
 }
 
 export const UIManager = ({ getState, onUploadRrwebEvents }: Props) => {

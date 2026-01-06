@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { RecordingState } from "../types";
 import { Overlay } from "./Overlay";
 
@@ -6,7 +6,7 @@ interface Props {
   isOpen: boolean;
   state: RecordingState;
   onClose: () => void;
-  onManualUpload: () => void;
+  onManualUpload: (projectKey: string) => void;
 }
 
 export const SettingsPanel = ({
@@ -16,6 +16,15 @@ export const SettingsPanel = ({
   onManualUpload,
 }: Props) => {
   const [copied, setCopied] = useState(false);
+  const [projectList, setProjectList] = useState<
+    { key: string; name: string }[]
+  >([]);
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  useEffect(() => {
+    fetch("http://localhost:5543/jira/project-list")
+      .then((response) => response.json())
+      .then((data) => setProjectList(data.projectList));
+  }, []);
 
   const copySessionId = async () => {
     if (!state.sessionId || state.sessionId === "-") return;
@@ -30,7 +39,7 @@ export const SettingsPanel = ({
   };
 
   const handleUpload = () => {
-    onManualUpload();
+    onManualUpload(selectedProject);
     onClose();
   };
 
@@ -227,6 +236,24 @@ export const SettingsPanel = ({
             </div>
           </div>
 
+          <select
+            value={selectedProject}
+            onChange={(e) => setSelectedProject(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "12px",
+              borderRadius: "8px",
+              border: "1px solid #e5e7eb",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+          >
+            {projectList.map((project) => (
+              <option key={project.key} value={project.key}>
+                {project.name}
+              </option>
+            ))}
+          </select>
           {/* Upload Button */}
           <button
             onClick={handleUpload}

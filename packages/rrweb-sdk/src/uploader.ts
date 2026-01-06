@@ -14,7 +14,8 @@ export class EventUploader {
 
   async send(
     events: eventWithTime[],
-    sessionId: string
+    sessionId: string,
+    jiraProjectKey: string
   ): Promise<UploadResponse | null> {
     if (events.length === 0) {
       console.log("[RRWeb SDK] 전송할 이벤트가 없습니다.");
@@ -28,6 +29,8 @@ export class EventUploader {
       const payload: UploadPayload = {
         packed: JSON.stringify({ packed }),
         sessionId,
+        jiraProjectKey,
+        userAgent: window.navigator.userAgent,
       };
 
       const response = await this.uploadRrwebEvent(payload);
@@ -56,9 +59,10 @@ export class EventUploader {
         const response = await fetch(this.serverUrl, {
           method: "POST",
           mode: "cors",
-          credentials: "include",
+          credentials: "omit", // credentials를 명시적으로 omit
           headers: {
             "Content-Type": "application/json",
+            Accept: "application/json",
           },
           body: JSON.stringify(payload),
         });

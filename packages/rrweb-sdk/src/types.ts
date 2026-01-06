@@ -124,6 +124,14 @@ export interface UploadPayload {
    * 세션 ID를 의미합니다.
    */
   sessionId: string;
+  /**
+   * 등록할 jira의 프로젝트 키 입니다,
+   */
+  jiraProjectKey: string;
+  /**
+   * 사용자 에이전트
+   */
+  userAgent: string;
 }
 
 /**
