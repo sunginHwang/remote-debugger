@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { record } from 'rrweb';
-import type { eventWithTime } from '@rrweb/types';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { record } from "rrweb";
+import type { eventWithTime } from "@rrweb/types";
 
 interface UseRRWebRecorderOptions {
   maxDurationMs?: number; // 최대 보관 시간 (기본: 60초)
@@ -24,7 +24,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
 
   // 이벤트 저장소 (ref 사용 - 렌더링 트리거 없이 관리)
   const eventsRef = useRef<eventWithTime[]>([]);
-  
+
   // 레코더 stop 함수
   const stopRecordingRef = useRef<(() => void) | undefined>(undefined);
 
@@ -47,7 +47,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
     const cutoffTime = now - maxDurationMs;
 
     const beforeCount = eventsRef.current.length;
-    
+
     // cutoffTime보다 최근 이벤트만 유지
     eventsRef.current = eventsRef.current.filter(
       (event) => event.timestamp >= cutoffTime
@@ -90,7 +90,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
       cleanupOldEvents();
     }, cleanupIntervalMs);
 
-    console.log('[RRWeb] ⏰ Cleanup 타이머 시작 (1초마다 실행)');
+    console.log("[RRWeb] ⏰ Cleanup 타이머 시작 (1초마다 실행)");
   }, [cleanupOldEvents, cleanupIntervalMs]);
 
   /**
@@ -100,37 +100,33 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
     if (cleanupTimerRef.current) {
       clearInterval(cleanupTimerRef.current);
       cleanupTimerRef.current = null;
-      console.log('[RRWeb] ⏰ Cleanup 타이머 중지');
+      console.log("[RRWeb] ⏰ Cleanup 타이머 중지");
     }
   }, []);
 
   /**
    * 이벤트 핸들러
    */
-  const handleEvent = useCallback(
-    (event: eventWithTime) => {
-      // 새 이벤트 추가
-      eventsRef.current.push(event);
-      console.log('[RRWeb] ✅ 이벤트 추가', event);
+  const handleEvent = useCallback((event: eventWithTime) => {
+    // 새 이벤트 추가
+    eventsRef.current.push(event);
+    console.log("[RRWeb] ✅ 이벤트 추가", event);
 
-      
-      // 상태 업데이트
-      setState((prev) => ({
-        ...prev,
-        eventCount: eventsRef.current.length,
-        newestEventTime: event.timestamp,
-        oldestEventTime: eventsRef.current[0]?.timestamp || event.timestamp,
-      }));
-    },
-    []
-  );
+    // 상태 업데이트
+    setState((prev) => ({
+      ...prev,
+      eventCount: eventsRef.current.length,
+      newestEventTime: event.timestamp,
+      oldestEventTime: eventsRef.current[0]?.timestamp || event.timestamp,
+    }));
+  }, []);
 
   /**
    * 레코딩 시작
    */
   const startRecording = useCallback(() => {
     if (state.isRecording) {
-      console.warn('[RRWeb] 이미 레코딩 중입니다.');
+      console.warn("[RRWeb] 이미 레코딩 중입니다.");
       return;
     }
 
@@ -156,9 +152,9 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
         isRecording: true,
       }));
 
-      console.log('[RRWeb] ✅ 레코딩 시작 (최대 60초 유지)');
+      console.log("[RRWeb] ✅ 레코딩 시작 (최대 60초 유지)");
     } catch (error) {
-      console.error('[RRWeb] 레코딩 시작 실패:', error);
+      console.error("[RRWeb] 레코딩 시작 실패:", error);
       onError?.(error as Error);
     }
   }, [state.isRecording, handleEvent, startCleanupTimer, onError]);
@@ -184,9 +180,9 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
         isRecording: false,
       }));
 
-      console.log('[RRWeb] ⏹️  레코딩 중지');
+      console.log("[RRWeb] ⏹️  레코딩 중지");
     } catch (error) {
-      console.error('[RRWeb] 레코딩 중지 실패:', error);
+      console.error("[RRWeb] 레코딩 중지 실패:", error);
       onError?.(error as Error);
     }
   }, [state.isRecording, stopCleanupTimer, onError]);
@@ -209,7 +205,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
       oldestEventTime: null,
       newestEventTime: null,
     }));
-    console.log('[RRWeb] 🧹 이벤트 초기화');
+    console.log("[RRWeb] 🧹 이벤트 초기화");
   }, []);
 
   /**
@@ -222,7 +218,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
 
     const start = eventsRef.current[0].timestamp;
     const end = eventsRef.current[eventsRef.current.length - 1].timestamp;
-    
+
     return {
       start,
       end,
@@ -246,7 +242,7 @@ export function useRRWebRecorder(options: UseRRWebRecorderOptions = {}) {
     eventCount: state.eventCount,
     oldestEventTime: state.oldestEventTime,
     newestEventTime: state.newestEventTime,
-    
+
     // 메서드
     startRecording,
     stopRecording,

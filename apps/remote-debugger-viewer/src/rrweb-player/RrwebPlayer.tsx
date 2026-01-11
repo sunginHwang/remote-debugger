@@ -1,8 +1,8 @@
-import rrwebPlayer from 'rrweb-player';
-import 'rrweb-player/dist/style.css';
+import rrwebPlayer from "rrweb-player";
+import "rrweb-player/dist/style.css";
 import type { eventWithTime } from "@rrweb/types";
-import type rrwebPlayerType from 'rrweb-player';
-import { useRef } from 'react';
+import type rrwebPlayerType from "rrweb-player";
+import { useRef } from "react";
 
 interface Props {
   emits: eventWithTime[];
@@ -13,25 +13,25 @@ interface Props {
  */
 const inspectReplayDOM = (playerController: rrwebPlayerType | null) => {
   if (!playerController) {
-    console.warn('[RRWeb DevTools] 플레이어가 초기화되지 않았습니다.');
+    console.warn("[RRWeb DevTools] 플레이어가 초기화되지 않았습니다.");
     return null;
   }
 
   const replayer = playerController.getReplayer();
   if (!replayer) {
-    console.warn('[RRWeb DevTools] Replayer를 찾을 수 없습니다.');
+    console.warn("[RRWeb DevTools] Replayer를 찾을 수 없습니다.");
     return null;
   }
 
   const iframe = replayer.iframe;
   if (!iframe) {
-    console.warn('[RRWeb DevTools] iframe을 찾을 수 없습니다.');
+    console.warn("[RRWeb DevTools] iframe을 찾을 수 없습니다.");
     return null;
   }
 
   const iframeDocument = iframe.contentDocument;
   if (!iframeDocument) {
-    console.warn('[RRWeb DevTools] iframe document에 접근할 수 없습니다.');
+    console.warn("[RRWeb DevTools] iframe document에 접근할 수 없습니다.");
     return null;
   }
 
@@ -46,21 +46,21 @@ const inspectReplayDOM = (playerController: rrwebPlayerType | null) => {
       timestamp: number;
     }>;
   }
-  
+
   const win = window as unknown as WindowWithRRWeb;
   win.__rrwebReplayDOM = iframeDocument;
   win.__rrwebReplayWindow = iframe.contentWindow || undefined;
   win.__rrwebReplayer = replayer;
 
-  console.log('✅ [RRWeb DevTools] 재생 DOM이 전역 변수에 할당되었습니다:');
-  console.log('  - window.__rrwebReplayDOM: iframe 내부의 document');
-  console.log('  - window.__rrwebReplayWindow: iframe 내부의 window');
-  console.log('  - window.__rrwebReplayer: Replayer 인스턴스');
-  console.log('');
-  console.log('🔍 Chrome DevTools에서 확인하는 방법:');
-  console.log('  1. Elements 탭에서 <iframe> 태그를 찾습니다');
-  console.log('  2. iframe을 클릭하여 내부 DOM을 검사합니다');
-  console.log('  3. 또는 Console에서 window.__rrwebReplayDOM을 입력합니다');
+  console.log("✅ [RRWeb DevTools] 재생 DOM이 전역 변수에 할당되었습니다:");
+  console.log("  - window.__rrwebReplayDOM: iframe 내부의 document");
+  console.log("  - window.__rrwebReplayWindow: iframe 내부의 window");
+  console.log("  - window.__rrwebReplayer: Replayer 인스턴스");
+  console.log("");
+  console.log("🔍 Chrome DevTools에서 확인하는 방법:");
+  console.log("  1. Elements 탭에서 <iframe> 태그를 찾습니다");
+  console.log("  2. iframe을 클릭하여 내부 DOM을 검사합니다");
+  console.log("  3. 또는 Console에서 window.__rrwebReplayDOM을 입력합니다");
 
   return {
     document: iframeDocument,
@@ -86,9 +86,9 @@ const extractNetworkRequests = (events: eventWithTime[]) => {
         data: CustomEventData;
       };
       if (
-        customEvent.data?.tag === 'network-fetch' ||
-        customEvent.data?.tag === 'network-xhr' ||
-        customEvent.data?.tag === 'network-request'
+        customEvent.data?.tag === "network-fetch" ||
+        customEvent.data?.tag === "network-xhr" ||
+        customEvent.data?.tag === "network-request"
       ) {
         return {
           tag: customEvent.data.tag,
@@ -101,7 +101,7 @@ const extractNetworkRequests = (events: eventWithTime[]) => {
     .filter((req): req is NonNullable<typeof req> => req !== null);
 
   if (networkRequests.length > 0) {
-    console.log('🌐 [RRWeb DevTools] 발견된 네트워크 요청:', networkRequests);
+    console.log("🌐 [RRWeb DevTools] 발견된 네트워크 요청:", networkRequests);
     interface WindowWithRRWeb extends Window {
       __rrwebNetworkRequests?: Array<{
         tag: string;
@@ -111,10 +111,10 @@ const extractNetworkRequests = (events: eventWithTime[]) => {
     }
     const win = window as unknown as WindowWithRRWeb;
     win.__rrwebNetworkRequests = networkRequests;
-    console.log('  - window.__rrwebNetworkRequests에서 확인 가능');
+    console.log("  - window.__rrwebNetworkRequests에서 확인 가능");
   } else {
-    console.log('⚠️ [RRWeb DevTools] 네트워크 요청이 기록되지 않았습니다.');
-    console.log('  레코딩 시 네트워크 요청을 커스텀 이벤트로 기록해야 합니다.');
+    console.log("⚠️ [RRWeb DevTools] 네트워크 요청이 기록되지 않았습니다.");
+    console.log("  레코딩 시 네트워크 요청을 커스텀 이벤트로 기록해야 합니다.");
   }
 
   return networkRequests;
@@ -147,22 +147,22 @@ export function RrwebPlayer({ emits }: Props) {
   };
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div style={{ width: "100vw", height: "100vh" }}>
       <h1>Rrweb Player</h1>
-      <div style={{ marginBottom: '10px' }}>
+      <div style={{ marginBottom: "10px" }}>
         <button onClick={handlePlay}>Play</button>
-        <button 
+        <button
           onClick={handleInspectDOM}
-          style={{ marginLeft: '10px' }}
+          style={{ marginLeft: "10px" }}
           title="Chrome DevTools에서 재생 DOM 검사하기"
         >
           🔍 DOM 검사
         </button>
       </div>
-      <div style={{ width: '80vw', height: '80vh' }} ref={playerRef}/>
-      <div style={{ marginTop: '10px', fontSize: '12px', color: '#666' }}>
+      <div style={{ width: "80vw", height: "80vh" }} ref={playerRef} />
+      <div style={{ marginTop: "10px", fontSize: "12px", color: "#666" }}>
         <p>💡 Chrome DevTools 사용법:</p>
-        <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+        <ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
           <li>Elements 탭에서 iframe 내부 DOM 검사 가능</li>
           <li>Console에서 window.__rrwebReplayDOM 접근 가능</li>
           <li>네트워크 요청은 커스텀 이벤트로 기록된 경우에만 확인 가능</li>

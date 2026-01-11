@@ -1,10 +1,10 @@
-import { useCallback, useState, useRef, useEffect } from 'react';
-import { record, EventType } from 'rrweb';
+import { useCallback, useState, useRef, useEffect } from "react";
+import { record, EventType } from "rrweb";
 // 기존 코드와 동일한 방식으로 import
-import type { eventWithTime } from '@rrweb/types';
+import type { eventWithTime } from "@rrweb/types";
 // rrweb-snapshot 타입은 rrweb 패키지의 의존성으로 포함됨
 // 별도 설치: pnpm add rrweb-snapshot@2.0.0-alpha.4
-import type { serializedNodeWithId } from 'rrweb-snapshot';
+import type { serializedNodeWithId } from "rrweb-snapshot";
 
 interface UseRRWebSnapshotOptions {
   maskAllInputs?: boolean;
@@ -33,13 +33,13 @@ interface SnapshotState {
 
 /**
  * rrweb을 사용하여 스냅샷만 기록하는 훅 (60초 sliding window 지원)
- * 
+ *
  * 이점:
  * - 이벤트 리스너를 즉시 중지하여 메모리 사용량 최소화
  * - 스냅샷 생성에만 집중
  * - 60초 단위로 주기적 스냅샷 생성 및 자동 정리
  * - 다른 프로젝트의 플레이어와 호환되는 형식으로 반환
- * 
+ *
  * 참고: 순수 rrweb-snapshot만 사용하려면 별도 설치 필요
  * pnpm add rrweb-snapshot@2.0.0-alpha.4
  */
@@ -56,16 +56,18 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
   } = options;
 
   // 스냅샷 저장소 (ref 사용 - 렌더링 트리거 없이 관리)
-  const snapshotsRef = useRef<Array<{
-    snapshot: serializedNodeWithId;
-    timestamp: number;
-    meta: eventWithTime;
-    fullSnapshot: eventWithTime;
-  }>>([]);
+  const snapshotsRef = useRef<
+    Array<{
+      snapshot: serializedNodeWithId;
+      timestamp: number;
+      meta: eventWithTime;
+      fullSnapshot: eventWithTime;
+    }>
+  >([]);
 
   // 스냅샷 생성 타이머
   const snapshotTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  
+
   // cleanup 타이머
   const cleanupTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -164,13 +166,17 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
             // 노드 개수 계산 (재귀적으로)
             const countNodes = (node: serializedNodeWithId): number => {
               let count = 1;
-              if ('childNodes' in node && Array.isArray(node.childNodes)) {
-                count += node.childNodes.reduce((sum, child) => sum + countNodes(child as serializedNodeWithId), 0);
+              if ("childNodes" in node && Array.isArray(node.childNodes)) {
+                count += node.childNodes.reduce(
+                  (sum, child) =>
+                    sum + countNodes(child as serializedNodeWithId),
+                  0
+                );
               }
               return count;
             };
 
-            console.log('[RRWeb Snapshot] ✅ 스냅샷 생성 완료', {
+            console.log("[RRWeb Snapshot] ✅ 스냅샷 생성 완료", {
               timestamp: now,
               nodeCount: countNodes(capturedSnapshot),
               totalSnapshots: snapshotsRef.current.length,
@@ -182,12 +188,14 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
               rawSnapshot: capturedSnapshot,
             });
           } else {
-            console.warn('[RRWeb Snapshot] 스냅샷 데이터를 캡처하지 못했습니다');
+            console.warn(
+              "[RRWeb Snapshot] 스냅샷 데이터를 캡처하지 못했습니다"
+            );
             resolve(null);
           }
         }, 50);
       } catch (error) {
-        console.error('[RRWeb Snapshot] 스냅샷 생성 실패:', error);
+        console.error("[RRWeb Snapshot] 스냅샷 생성 실패:", error);
         onError?.(error as Error);
         resolve(null);
       }
@@ -202,7 +210,7 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
     const cutoffTime = now - maxDurationMs;
 
     const beforeCount = snapshotsRef.current.length;
-    
+
     // cutoffTime보다 최근 스냅샷만 유지
     snapshotsRef.current = snapshotsRef.current.filter(
       (snapshot) => snapshot.timestamp >= cutoffTime
@@ -218,7 +226,8 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
         snapshots: [...snapshotsRef.current],
         snapshotCount: afterCount,
         oldestSnapshotTime: snapshotsRef.current[0]?.timestamp || null,
-        newestSnapshotTime: snapshotsRef.current[afterCount - 1]?.timestamp || null,
+        newestSnapshotTime:
+          snapshotsRef.current[afterCount - 1]?.timestamp || null,
       }));
     } else {
       setState((prev) => ({
@@ -231,7 +240,9 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
     }
 
     if (removedCount > 0) {
-      console.log(`[RRWeb Snapshot] 🗑️  ${removedCount}개 오래된 스냅샷 제거됨`);
+      console.log(
+        `[RRWeb Snapshot] 🗑️  ${removedCount}개 오래된 스냅샷 제거됨`
+      );
     }
   }, [maxDurationMs]);
 
@@ -247,7 +258,9 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
       cleanupOldSnapshots();
     }, cleanupIntervalMs);
 
-    console.log(`[RRWeb Snapshot] ⏰ Cleanup 타이머 시작 (${cleanupIntervalMs}ms마다 실행)`);
+    console.log(
+      `[RRWeb Snapshot] ⏰ Cleanup 타이머 시작 (${cleanupIntervalMs}ms마다 실행)`
+    );
   }, [cleanupOldSnapshots, cleanupIntervalMs]);
 
   /**
@@ -257,7 +270,7 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
     if (cleanupTimerRef.current) {
       clearInterval(cleanupTimerRef.current);
       cleanupTimerRef.current = null;
-      console.log('[RRWeb Snapshot] ⏰ Cleanup 타이머 중지');
+      console.log("[RRWeb Snapshot] ⏰ Cleanup 타이머 중지");
     }
   }, []);
 
@@ -277,7 +290,9 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
       takeSnapshot();
     }, snapshotIntervalMs);
 
-    console.log(`[RRWeb Snapshot] ⏰ 스냅샷 생성 타이머 시작 (${snapshotIntervalMs}ms마다 실행)`);
+    console.log(
+      `[RRWeb Snapshot] ⏰ 스냅샷 생성 타이머 시작 (${snapshotIntervalMs}ms마다 실행)`
+    );
   }, [takeSnapshot, snapshotIntervalMs]);
 
   /**
@@ -287,7 +302,7 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
     if (snapshotTimerRef.current) {
       clearInterval(snapshotTimerRef.current);
       snapshotTimerRef.current = null;
-      console.log('[RRWeb Snapshot] ⏰ 스냅샷 생성 타이머 중지');
+      console.log("[RRWeb Snapshot] ⏰ 스냅샷 생성 타이머 중지");
     }
   }, []);
 
@@ -296,7 +311,7 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
    */
   const startPeriodicSnapshots = useCallback(() => {
     if (state.isRunning) {
-      console.warn('[RRWeb Snapshot] 이미 실행 중입니다.');
+      console.warn("[RRWeb Snapshot] 이미 실행 중입니다.");
       return;
     }
 
@@ -308,7 +323,9 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
       isRunning: true,
     }));
 
-    console.log('[RRWeb Snapshot] ✅ 주기적 스냅샷 생성 시작 (60초 sliding window)');
+    console.log(
+      "[RRWeb Snapshot] ✅ 주기적 스냅샷 생성 시작 (60초 sliding window)"
+    );
   }, [state.isRunning, startSnapshotTimer, startCleanupTimer]);
 
   /**
@@ -327,7 +344,7 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
       isRunning: false,
     }));
 
-    console.log('[RRWeb Snapshot] ⏹️  주기적 스냅샷 생성 중지');
+    console.log("[RRWeb Snapshot] ⏹️  주기적 스냅샷 생성 중지");
   }, [state.isRunning, stopSnapshotTimer, stopCleanupTimer]);
 
   /**
@@ -342,7 +359,7 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
       oldestSnapshotTime: null,
       newestSnapshotTime: null,
     }));
-    console.log('[RRWeb Snapshot] 🧹 모든 스냅샷 초기화');
+    console.log("[RRWeb Snapshot] 🧹 모든 스냅샷 초기화");
   }, []);
 
   /**
@@ -384,7 +401,7 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
 
     const start = snapshotsRef.current[0].timestamp;
     const end = snapshotsRef.current[snapshotsRef.current.length - 1].timestamp;
-    
+
     return {
       start,
       end,
@@ -404,7 +421,12 @@ export function useRRWebSnapshot(options: UseRRWebSnapshotOptions = {}) {
       stopPeriodicSnapshots();
       stopCleanupTimer();
     };
-  }, [autoStart, startPeriodicSnapshots, stopPeriodicSnapshots, stopCleanupTimer]);
+  }, [
+    autoStart,
+    startPeriodicSnapshots,
+    stopPeriodicSnapshots,
+    stopCleanupTimer,
+  ]);
 
   return {
     // 상태

@@ -9,6 +9,7 @@ rrweb 플레이어를 통해 재생되는 특정 시점의 DOM 정보와 네트�
 ### 1. DOM 정보 확인 - **가능** ✅
 
 rrweb 플레이어는 실제 DOM을 재생합니다:
+
 - 재생되는 DOM은 **iframe 내부**에 생성됩니다
 - Chrome DevTools로 **실제 DOM 구조를 검사**할 수 있습니다
 - Elements 탭에서 모든 DOM 노드를 확인할 수 있습니다
@@ -16,11 +17,13 @@ rrweb 플레이어는 실제 DOM을 재생합니다:
 ### 2. 네트워크 정보 확인 - **제한적** ⚠️
 
 **기본 동작:**
+
 - rrweb은 네트워크 요청을 **기록하지 않습니다** (기본 설정)
 - 재생 시 실제 네트워크 요청이 **발생하지 않습니다**
 - Network 탭에는 아무것도 표시되지 않습니다
 
 **해결 방법:**
+
 - rrweb의 네트워크 플러그인을 사용하거나
 - 커스텀 이벤트로 네트워크 요청을 기록해야 합니다
 
@@ -29,6 +32,7 @@ rrweb 플레이어는 실제 DOM을 재생합니다:
 ### 방법 1: Elements 탭에서 직접 검사
 
 1. **플레이어 실행**
+
    ```typescript
    playerControllerRef.current = new rrwebPlayer({
      target: playerRef.current,
@@ -59,7 +63,7 @@ const iframeDocument = iframe?.contentDocument;
 const iframeWindow = iframe?.contentWindow;
 
 // Chrome DevTools에서 확인 가능
-console.log('iframe DOM:', iframeDocument?.body);
+console.log("iframe DOM:", iframeDocument?.body);
 ```
 
 ### 방법 3: React DevTools와 함께 사용
@@ -73,6 +77,7 @@ console.log('iframe DOM:', iframeDocument?.body);
 ### 문제점
 
 rrweb은 기본적으로 네트워크 요청을 기록하지 않습니다:
+
 - `fetch()`, `XMLHttpRequest` 등의 네트워크 요청은 기록되지 않음
 - 재생 시 실제 네트워크 요청이 발생하지 않음
 
@@ -83,7 +88,7 @@ rrweb은 기본적으로 네트워크 요청을 기록하지 않습니다:
 ```typescript
 // 레코딩 시
 const recordNetworkRequest = (url: string, method: string, response: any) => {
-  record.addCustomEvent('network-request', {
+  record.addCustomEvent("network-request", {
     url,
     method,
     response,
@@ -96,7 +101,7 @@ const originalFetch = window.fetch;
 window.fetch = async (...args) => {
   const response = await originalFetch(...args);
   const data = await response.clone().json();
-  recordNetworkRequest(args[0] as string, 'GET', data);
+  recordNetworkRequest(args[0] as string, "GET", data);
   return response;
 };
 ```
@@ -108,6 +113,7 @@ rrweb은 플러그인 시스템을 제공합니다. 네트워크 요청을 기�
 #### 방법 3: 재생 시 네트워크 요청 재실행 (비권장)
 
 재생 시 실제 네트워크 요청을 다시 보내는 것은:
+
 - ❌ 보안 문제 (인증 토큰 등)
 - ❌ 서버 부하
 - ❌ 데이터 변경 위험
@@ -123,27 +129,27 @@ rrweb은 플러그인 시스템을 제공합니다. 네트워크 요청을 기�
 const inspectReplayDOM = () => {
   const replayer = playerControllerRef.current?.getReplayer();
   if (!replayer) {
-    console.warn('Replayer not found');
+    console.warn("Replayer not found");
     return;
   }
 
   const iframe = replayer.iframe;
   if (!iframe) {
-    console.warn('Iframe not found');
+    console.warn("Iframe not found");
     return;
   }
 
   const iframeDocument = iframe.contentDocument;
   if (!iframeDocument) {
-    console.warn('Cannot access iframe document');
+    console.warn("Cannot access iframe document");
     return;
   }
 
   // DOM 정보 출력
-  console.log('Replay DOM:', {
+  console.log("Replay DOM:", {
     body: iframeDocument.body,
     html: iframeDocument.documentElement,
-    allElements: iframeDocument.querySelectorAll('*'),
+    allElements: iframeDocument.querySelectorAll("*"),
   });
 
   // Chrome DevTools에서 확인 가능
@@ -155,7 +161,7 @@ const inspectReplayDOM = () => {
 
 ```typescript
 // 레코딩 시 네트워크 요청 기록
-import { record } from 'rrweb';
+import { record } from "rrweb";
 
 // 네트워크 요청 인터셉터
 const setupNetworkRecording = () => {
@@ -164,23 +170,23 @@ const setupNetworkRecording = () => {
   window.fetch = async (...args) => {
     const url = args[0] as string;
     const options = args[1] || {};
-    
+
     try {
       const response = await originalFetch(...args);
       const clonedResponse = response.clone();
-      
+
       // 커스텀 이벤트로 기록
-      record.addCustomEvent('network-fetch', {
+      record.addCustomEvent("network-fetch", {
         url,
-        method: options.method || 'GET',
+        method: options.method || "GET",
         status: response.status,
         timestamp: Date.now(),
         // 응답 데이터는 크기가 클 수 있으므로 선택적으로 기록
       });
-      
+
       return response;
     } catch (error) {
-      record.addCustomEvent('network-error', {
+      record.addCustomEvent("network-error", {
         url,
         error: error.message,
         timestamp: Date.now(),
@@ -191,9 +197,9 @@ const setupNetworkRecording = () => {
 
   // XMLHttpRequest 인터셉트
   const originalXHROpen = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function(method, url, ...args) {
-    this.addEventListener('load', function() {
-      record.addCustomEvent('network-xhr', {
+  XMLHttpRequest.prototype.open = function (method, url, ...args) {
+    this.addEventListener("load", function () {
+      record.addCustomEvent("network-xhr", {
         url,
         method,
         status: this.status,
@@ -207,14 +213,14 @@ const setupNetworkRecording = () => {
 
 ## 📊 확인 가능한 정보 요약
 
-| 정보 유형 | 확인 가능 여부 | 방법 |
-|----------|--------------|------|
-| **DOM 구조** | ✅ 가능 | Elements 탭에서 iframe 내부 검사 |
-| **DOM 속성** | ✅ 가능 | Elements 탭에서 속성 확인 |
-| **스타일 (CSS)** | ✅ 가능 | Elements 탭의 Styles 패널 |
-| **이벤트 리스너** | ✅ 가능 | Elements 탭의 Event Listeners 패널 |
-| **실제 네트워크 요청** | ❌ 불가능 | 기본적으로 기록되지 않음 |
-| **네트워크 요청 기록** | ⚠️ 커스텀 필요 | 커스텀 이벤트로 기록 필요 |
+| 정보 유형              | 확인 가능 여부 | 방법                               |
+| ---------------------- | -------------- | ---------------------------------- |
+| **DOM 구조**           | ✅ 가능        | Elements 탭에서 iframe 내부 검사   |
+| **DOM 속성**           | ✅ 가능        | Elements 탭에서 속성 확인          |
+| **스타일 (CSS)**       | ✅ 가능        | Elements 탭의 Styles 패널          |
+| **이벤트 리스너**      | ✅ 가능        | Elements 탭의 Event Listeners 패널 |
+| **실제 네트워크 요청** | ❌ 불가능      | 기본적으로 기록되지 않음           |
+| **네트워크 요청 기록** | ⚠️ 커스텀 필요 | 커스텀 이벤트로 기록 필요          |
 
 ## 🎯 권장 사항
 
@@ -228,4 +234,3 @@ const setupNetworkRecording = () => {
 - [rrweb 공식 문서](https://github.com/rrweb-io/rrweb)
 - [rrweb 플러그인 가이드](https://github.com/rrweb-io/rrweb/blob/master/docs/plugins.md)
 - [Chrome DevTools 가이드](https://developer.chrome.com/docs/devtools/)
-

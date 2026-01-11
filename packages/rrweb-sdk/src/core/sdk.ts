@@ -1,4 +1,4 @@
-import React, { createElement } from "react";
+import { createElement } from "react";
 import { createRoot } from "react-dom/client";
 import type { Root } from "react-dom/client";
 import { RecordingManager } from "./recorder";

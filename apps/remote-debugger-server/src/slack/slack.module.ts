@@ -8,4 +8,3 @@ import { SlackService } from "./slack.service";
   exports: [SlackService],
 })
 export class SlackModule {}
-
