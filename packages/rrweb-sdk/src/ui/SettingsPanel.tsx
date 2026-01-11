@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { RecordingState } from "../types";
 import { Overlay } from "./Overlay";
+import { logger } from "../utils/logger";
 
 interface Props {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export const SettingsPanel = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      console.error("[RRWeb SDK] Failed to copy session ID:", error);
+      logger.error("Failed to copy session ID:", error);
     }
   };
 

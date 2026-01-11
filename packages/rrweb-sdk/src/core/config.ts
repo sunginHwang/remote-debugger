@@ -1,9 +1,6 @@
-import type { RRWebSDKConfig } from "./types";
+import type { RRWebSDKConfig } from "../types";
 
-/**
- * Default configuration values
- */
-export const DEFAULT_CONFIG: Required<
+type DefaultConfig = Required<
   Omit<
     RRWebSDKConfig,
     | "serverUrl"
@@ -15,24 +12,30 @@ export const DEFAULT_CONFIG: Required<
     | "onUploadError"
     | "onError"
   >
-> = {
+>;
+
+/**
+ * 기본 옵션 타입 정의
+ */
+export const DEFAULT_CONFIG: DefaultConfig = {
   autoStart: true,
-  uploadInterval: 30000, // 30 seconds
-  maxDuration: 60000, // 60 seconds
-  showUI: true,
+  maxDuration: 60_000, // 60 seconds
   uiPosition: "bottom-right",
-  retryAttempts: 3,
-  retryDelay: 1000,
+  uiContainerId: "rrweb-sdk-ui-root",
+  maxRetryCount: 3,
+  retryDelay: 1_000,
   recordingOptions: {
-    checkoutEveryNms: 30000, // Full snapshot every 30 seconds
-    checkoutEveryNth: 200, // Full snapshot every 200 events
+    // 30초 단위 풀 스냅샷
+    checkoutEveryNms: 30_000,
+    // 200개 이벤트 단위 풀 스냅샷
+    checkoutEveryNth: 200,
     recordCanvas: true,
     collectFonts: true,
   },
 };
 
 /**
- * Merge user config with defaults
+ * sdk 사용 옵션 + 기본 옵션값을 합쳐서 반환합니다.
  */
 export function mergeConfig(
   userConfig: RRWebSDKConfig
@@ -44,14 +47,11 @@ export function mergeConfig(
       ...DEFAULT_CONFIG.recordingOptions,
       ...userConfig.recordingOptions,
     },
-    // Callbacks default to no-op
     onRecordingStart: userConfig.onRecordingStart || (() => {}),
     onRecordingStop: userConfig.onRecordingStop || (() => {}),
     onUploadSuccess: userConfig.onUploadSuccess || (() => {}),
     onUploadError: userConfig.onUploadError || (() => {}),
     onError: userConfig.onError || (() => {}),
-    // Session ID and generator handled separately
     sessionId: userConfig.sessionId || "",
-    generateSessionId: userConfig.generateSessionId || (() => ""),
   };
 }

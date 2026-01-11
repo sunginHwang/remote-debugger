@@ -1,9 +1,10 @@
 import { record } from "rrweb";
 import type { eventWithTime } from "@rrweb/types";
-import type { RecordingState } from "./types";
+import type { RecordingState } from "../types";
+import { logger } from "../utils/logger";
 
-const ONE_MINUTE_MS = 60_000;
-const ONE_SECOND_MS = 1000;
+const ONE_SECOND_MS = 1_000;
+const ONE_MINUTE_MS = ONE_SECOND_MS * 60;
 
 /**
  * 세션리플레이 기록 처리 담당
@@ -47,7 +48,7 @@ export class RecordingManager {
    */
   start() {
     if (this.isRecording) {
-      console.warn("[RRWeb SDK] Already recording");
+      logger.warn("Already recording");
       return;
     }
 
@@ -71,9 +72,9 @@ export class RecordingManager {
       this.startCleanupTimer();
 
       this.isRecording = true;
-      console.log("[RRWeb SDK] Recording started");
+      logger.log("Recording started");
     } catch (error) {
-      console.error("[RRWeb SDK] Failed to start recording:", error);
+      logger.error("Failed to start recording:", error);
       this.onError?.(error as Error);
     }
   }
@@ -91,9 +92,9 @@ export class RecordingManager {
       this.stopFn = undefined;
       this.stopCleanupTimer();
       this.isRecording = false;
-      console.log("[RRWeb SDK] Recording stopped");
+      logger.log("Recording stopped");
     } catch (error) {
-      console.error("[RRWeb SDK] Failed to stop recording:", error);
+      logger.error("Failed to stop recording:", error);
       this.onError?.(error as Error);
     }
   }

@@ -1,7 +1,8 @@
 import { pack } from "rrweb";
 import type { eventWithTime } from "@rrweb/types";
-import type { UploadPayload, UploadResponse } from "./types";
-import { delay } from "./utils/delay";
+import type { UploadPayload, UploadResponse } from "../types";
+import { delay } from "../utils/delay";
+import { logger } from "../utils/logger";
 
 export class EventUploader {
   constructor(
@@ -18,7 +19,7 @@ export class EventUploader {
     jiraProjectKey: string
   ): Promise<UploadResponse | null> {
     if (events.length === 0) {
-      console.log("[RRWeb SDK] 전송할 이벤트가 없습니다.");
+      logger.log("전송할 이벤트가 없습니다.");
       return null;
     }
 
@@ -35,15 +36,15 @@ export class EventUploader {
 
       const response = await this.uploadRrwebEvent(payload);
 
-      console.log(
-        `[RRWeb SDK] ${response.saved || events.length}개의 이벤트를 전송했습니다. 세션 ID: ${response.sessionId}`
+      logger.log(
+        `${response.saved || events.length}개의 이벤트를 전송했습니다. 세션 ID: ${response.sessionId}`
       );
 
       this.onSuccess?.(response.sessionId, response.saved || events.length);
 
       return response;
     } catch (error) {
-      console.error("[RRWeb SDK] 전송 실패:", error);
+      logger.error("전송 실패:", error);
       this.onError?.(error as Error);
       return null;
     }
@@ -75,8 +76,8 @@ export class EventUploader {
         return result;
       } catch (error) {
         lastError = error as Error;
-        console.warn(
-          `[RRWeb SDK] Upload attempt ${retryCount + 1}/${this.maxRetryCount} failed:`,
+        logger.warn(
+          `Upload attempt ${retryCount + 1}/${this.maxRetryCount} failed:`,
           error
         );
 

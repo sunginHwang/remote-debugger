@@ -1,5 +1,3 @@
-import type { eventWithTime } from "@rrweb/types";
-
 /**
  * rrweb SDK 설정 옵션
  */
@@ -32,6 +30,12 @@ export interface RRWebSDKConfig {
    * @default "bottom-right"
    */
   uiPosition?: "bottom-right" | "bottom-left" | "top-right" | "top-left";
+
+  /**
+   * UI 컨테이너 id
+   * @default "rrweb-sdk-ui-root"
+   */
+  uiContainerId?: string;
 
   /**
    * rrweb 녹화 옵션
@@ -83,67 +87,4 @@ export interface RRWebSDKConfig {
    * 일반 오류 발생 시 콜백
    */
   onError?: (error: Error) => void;
-}
-
-/**
- * 녹화 상태 정보
- */
-export interface RecordingState {
-  /**
-   * 기록 중인지의 상태를 의미합니다.
-   */
-  isRecording: boolean;
-  eventCount: number;
-  /**
-   * 가장 오래된 이벤트의 타임스탬프를 의미합니다.
-   */
-  oldestEventTime: number | null;
-  /**
-   * 가장 최근 이벤트의 타임스탬프를 의미합니다.
-   */
-  newestEventTime: number | null;
-  /**
-   * 세션 ID를 의미합니다.
-   */
-  sessionId: string;
-  /**
-   * 기록 시간을 의미합니다.
-   */
-  durationMs: number;
-}
-
-/**
- * 업로드 페이로드 형식 (서버 API와 일치)
- */
-export interface UploadPayload {
-  /**
-   * 이벤트를 패킹한 압축된 문자열을 의미합니다.
-   */
-  packed: string;
-  /**
-   * 세션 ID를 의미합니다.
-   */
-  sessionId: string;
-  /**
-   * 등록할 jira의 프로젝트 키 입니다,
-   */
-  jiraProjectKey: string;
-  /**
-   * 사용자 에이전트
-   */
-  userAgent: string;
-}
-
-/**
- * 서버로부터의 업로드 응답
- */
-export interface UploadResponse {
-  /**
-   * 세션 ID를 의미합니다.
-   */
-  sessionId: string;
-  /**
-   * 저장된 이벤트 갯수를 의미합니다.
-   */
-  saved?: number;
 }
